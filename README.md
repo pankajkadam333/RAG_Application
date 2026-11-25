@@ -149,12 +149,36 @@ Azure__BlobContainer=<container name>
 AzureSearch__Endpoint=https://<your-search>.search.windows.net
 AzureSearch__IndexName=azureblob-index
 AzureSearch__ApiKey=<key>
-Cors__AllowedOrigins__0=https://<your-frontend-host>
+Cors__AllowedOrigins=https://<your-frontend-host>
 ```
 
 In Azure mode, you need an Azure AI Search **indexer** on the blob container that writes the document text into a `content` field of the index. Uploads go to Blob Storage, and the indexer makes them searchable.
 
-The frontend currently calls `https://localhost:7139/api` (see `Frontend/src/app/services/azure-ai.service.ts` and `document.service.ts`). Change that URL to your deployed API's address before deploying.
+### Connecting the frontend and the API
+
+Two settings must point at each other:
+
+**1. Frontend → API URL** (`Frontend/public/config.json`)
+
+```json
+{ "apiUrl": "https://<your-api-host>/api" }
+```
+
+The app reads this file in the browser at startup, so it is **not** baked into the build. Build once (`npx ng build`), deploy the contents of `dist/demo/browser`, then edit `config.json` on the server for each environment. A container can also write the file at startup from an environment variable. If the file is missing, the app falls back to `https://localhost:7139/api`.
+
+**2. API → allowed frontend URL (CORS)** (`Cors:AllowedOrigins` in `appsettings.json`)
+
+```json
+"Cors": { "AllowedOrigins": [ "https://<your-frontend-host>" ] }
+```
+
+Or set it as one environment variable, with several URLs separated by commas. This replaces the appsettings list:
+
+```
+Cors__AllowedOrigins=https://app.example.com,https://www.example.com
+```
+
+Use the scheme and host exactly as the browser shows them, with no path. Trailing slashes are removed automatically. The API logs `CORS allowed origins: …` at startup so you can check what it picked up. Locally this defaults to `http://localhost:4200`.
 
 ## Known limitations
 

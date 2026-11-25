@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Inject } from '@angular/core';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { ChatMessage } from '../models/chat-message.model';
@@ -8,10 +10,11 @@ import { ChatMessage } from '../models/chat-message.model';
   providedIn: 'root'
 })
 export class AzureAIService {
-  // These would be environment variables in a real application
-  private apiUrl = 'https://localhost:7139/api';
+  private readonly apiUrl: string;
   
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, @Inject(APP_CONFIG) config: AppConfig) {
+    this.apiUrl = config.apiUrl;
+  }
   
   /**
    * Send a chat message and get a response from Azure OpenAI

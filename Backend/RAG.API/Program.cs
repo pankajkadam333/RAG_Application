@@ -38,8 +38,19 @@ else
         $"Unknown AI:Provider '{provider}'. Use '{AiProviders.Ollama}' or '{AiProviders.Azure}'.");
 }
 
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-                     ?? new[] { "http://localhost:4200" };
+// Frontend URL(s) allowed to call this API. Accepts a JSON array in appsettings,
+// or a single comma-separated value, e.g. env var Cors__AllowedOrigins="https://app.example.com,https://www.example.com".
+var corsSection = builder.Configuration.GetSection("Cors:AllowedOrigins");
+// A single value (env var) overrides the appsettings array.
+var allowedOrigins = (!string.IsNullOrWhiteSpace(corsSection.Value)
+        ? corsSection.Value.Split(',')
+        : corsSection.Get<string[]>() ?? Array.Empty<string>())
+    .Select(o => o.Trim().TrimEnd('/'))
+    .Where(o => o.Length > 0)
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+if (allowedOrigins.Length == 0)
+    allowedOrigins = new[] { "http://localhost:4200" };
 
 builder.Services.AddCors(options =>
 {
@@ -54,6 +65,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.Logger.LogInformation("AI provider: {Provider}", provider);
+app.Logger.LogInformation("CORS allowed origins: {Origins}", string.Join(", ", allowedOrigins));
 
 if (app.Environment.IsDevelopment())
 {

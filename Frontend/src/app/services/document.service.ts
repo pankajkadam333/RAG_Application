@@ -4,6 +4,8 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { delay, map, tap } from 'rxjs/operators';
 import { Document, DocumentStatus } from '../models/document.model';
 import { AzureAIService } from './azure-ai.service';
+import { Inject } from '@angular/core';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +14,14 @@ export class DocumentService {
   private documents = new BehaviorSubject<Document[]>([]);
   public documents$ = this.documents.asObservable();
   
-  // This would be an environment variable in a real application
-  private apiUrl = 'https://your-storage-api-url.azurewebsites.net/api';
+  private readonly apiUrl: string;
   
   constructor(
     private http: HttpClient,
-    private azureAIService: AzureAIService
+    private azureAIService: AzureAIService,
+    @Inject(APP_CONFIG) config: AppConfig
   ) {
+    this.apiUrl = config.apiUrl;
     // Initialize with mock data for demo purposes
     this.loadMockDocuments();
   }
@@ -31,7 +34,7 @@ export class DocumentService {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post('https://localhost:7139/api/FileUpload', formData).subscribe({
+    this.http.post(`${this.apiUrl}/FileUpload`, formData).subscribe({
       next: (res) => 
         console.log('File uploaded successfully!'),
       error: (err) => alert('Upload failed')
