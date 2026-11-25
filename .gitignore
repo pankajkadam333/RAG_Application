@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Local RAG index (Ollama mode)
+Backend/RAG.API/App_Data/
+
+# Node / Angular
+node_modules/
+.angular/
+dist/
+
+# Secrets / local env
+.env
+appsettings.*.local.json
+
+# Editor / tooling
+.vscode/
+.claude/
